@@ -2,7 +2,7 @@
 A simple mesos framework for running docker containers on mesos.
 
 How to build the binary?
-- Just run make and it will build the docker binary for you.
+- Just run make and it will build the docker-mesos binary for you.
 
 `bin/docker-mesos --help`
 
