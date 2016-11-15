@@ -1,9 +1,11 @@
 package main
 
 import (
+    "bytes"
 	"io/ioutil"
 	"net"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +37,22 @@ func newDockerScheduler(exec *mesos.ExecutorInfo, total int) *DockerScheduler {
 		executor:   exec,
 		totalTasks: total,
 	}
+}
+
+func getIp() string {
+    cmd := exec.Command("/bin/hostname", "-i")
+
+    var out bytes.Buffer
+    cmd.Stdout = &out
+
+    err := cmd.Run()
+    if err != nil {
+        panic(err)
+    }
+
+    ip := out.String()
+    ips := strings.Split(ip, " ")
+    return ips[0]
 }
 
 func (sched *DockerScheduler) Registered(driver sched.SchedulerDriver, frameworkId *mesos.FrameworkID, masterInfo *mesos.MasterInfo) {
@@ -225,7 +243,7 @@ func main() {
         cli.StringFlag{
             Name:  "mesos_authentication_principal",
             Value: "",
-            Usage: "Use a logrus hook",
+            Usage: "Provide mesos auth principle",
         },
         cli.StringFlag{
             Name:  "mesos_authentication_provider",
@@ -288,7 +306,8 @@ func run(ctx *cli.Context) {
 			cred.Secret = proto.String(string(secret))
 		}
 	}
-	bindingAddress := parseIP("10.40.1.203")
+    ip := getIp()
+	bindingAddress := parseIP(ip)
 
 	config := sched.DriverConfig{
 		Scheduler:      newDockerScheduler(exec, copies),
